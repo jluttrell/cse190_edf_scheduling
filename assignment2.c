@@ -23,12 +23,6 @@ void learn_workloads(SharedVariable* sv) {
   long long beginTime;
   long long endTime;
 
-  int i;
-  for(i = 0; i < 8; ++i)
-  {
-    sv->deadlines[i] = LLONG_MAX;
-    sv->prev_alive[i] = 0; 
-  }
   sv->avgTimeToSched = 0;
   sv->numTimesSched = 0;
   sv->prev_thread = 0;
@@ -84,6 +78,14 @@ void learn_workloads(SharedVariable* sv) {
 
   sv->exec_times[7] = endTime - beginTime;
 
+  int i;
+  for(i = 0; i < 8; ++i)
+  {
+    sv->deadlines[i] = LLONG_MAX;
+    sv->prev_alive[i] = 0; 
+    //printDBG("exec %d = %lld\n", i, sv->exec_times[i]);
+  }
+  
 	// Tip 1. You can call each workload function here like:
 	// thread_button();
 
@@ -158,6 +160,9 @@ TaskSelection select_task(SharedVariable* sv, const int* aliveTasks, long long i
   //printDBG("sv->avgTimeToSched = %lld\n", sv->avgTimeToSched);
   
   sv->prev_thread = nextTask;
+  
+  if(nextTask == 2)
+    nextFreq = 1;
   
   TaskSelection sel;
   sel.task = nextTask;

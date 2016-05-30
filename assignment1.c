@@ -71,7 +71,7 @@ void body_twocolor(SharedVariable* sv) {
 void body_temp(SharedVariable* sv) {
 	if((sv->state == 1) && digitalRead(PIN_TEMP) == HIGH) {
 		sv->temp_activated = 1;
-		printf("TEMPERATURE EMERGENCY!!\n");
+		//printf("TEMPERATURE EMERGENCY!!\n");
 	} else if((sv->state == 0) || digitalRead(PIN_TEMP) == LOW) {
 		sv->temp_activated = 0;
 	}
@@ -80,7 +80,7 @@ void body_temp(SharedVariable* sv) {
 void body_track(SharedVariable* sv) {
 	if((sv->state == 1) && digitalRead(PIN_TRACK) == LOW) {
 		sv->track_activated = 1;
-		printf("TRACKING ACTIVATED!\n");
+		//printf("TRACKING ACTIVATED!\n");
 	} else if(sv->state == 0) {
 		sv->track_activated = 0;
 	}
@@ -140,7 +140,7 @@ void body_buzzer(SharedVariable* sv) {
 	if(sv->state == 1) {
 		if(sv->temp_activated == 1) {
 		  digitalWrite(PIN_BUZZER, HIGH);
-		  printf("BUZZER ACTIVATED!\n");
+		  //printf("BUZZER ACTIVATED!\n");
 	
 		} 
 		else if(sv->temp_activated == 0) {

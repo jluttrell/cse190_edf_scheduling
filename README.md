@@ -1,1 +1,1 @@
-# cse190_edf_scheduling
+# CSE 190 EDF Scheduling AlgoirthmJoseph LuttrellAlexes Macedo

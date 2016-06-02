@@ -36,24 +36,23 @@
 // as the function parameter.
 // If needed, you can add anything in this structure.
 typedef struct shared_variable {
-	int bProgramExit; // Once it is set to 1, the program will be terminated.
-	int state; //keeps track of the state
-	int shock_activated; //if shock is activated
-	int temp_activated; //if temp sensor activated
-	int track_activated; //if tracking sensor activate
-	int buttonState;
-	int lastButtonState;
-	long lastDebounce;
-	long debounceDelay;
+  int bProgramExit; // Once it is set to 1, the program will be terminated.
+  int state; //keeps track of the state
+  int shock_activated; //if shock is activated
+  int temp_activated; //if temp sensor activated
+  int track_activated; //if tracking sensor activate
+  int buttonState;
+  int lastButtonState;
+  long lastDebounce;
+  long debounceDelay;
   // these are the execution times for each corresponding sensor/actuator
   int count;  
   long long exec_times[8];
   long long deadlines[8];
+  long long totalIdleTime;
   int prev_thread;
   int prev_alive[8];
-  int avgTimeToSched; 
-  int runningSchedTime;
-  int numTimesSched;
+  int freq[8];
 
 } SharedVariable;
 

@@ -11,7 +11,7 @@ void init_shared_variable(SharedVariable* sv) {
 	sv->shock_activated = 0;
 	sv->temp_activated = 0;
 	sv->track_activated = 0;
-	sv->lastButtonState = LOW;
+	sv->lastButtonState = HIGH;
 	sv->lastDebounce = 0;
 	sv->debounceDelay = 50;
 	sv->count = 0;
@@ -32,11 +32,13 @@ void init_sensors(SharedVariable* sv) {
 
 void body_button(SharedVariable* sv) {
 	int var = digitalRead(PIN_BUTTON);
+	sv->buttonState = var;
 
 	//if(var != sv->lastButtonState) {
 	 // sv->lastDebounce = millis();
 	  
-	  if(sv->buttonState == HIGH) {
+	  if(sv->buttonState == HIGH && sv->lastButtonState == LOW) {
+		 //printf("buttonPressed\n");
 		  int warning = sv->shock_activated || sv->temp_activated || sv->track_activated;
 		  if(sv->state == 0){
 			  sv->state = 1;
@@ -89,7 +91,7 @@ void body_track(SharedVariable* sv) {
 void body_shock(SharedVariable* sv) {
 	if((sv->state == 1) && digitalRead(PIN_SHOCK) == LOW) {
 		sv->shock_activated = 1;
-		printf("SHOCK ACTIVATED!\n");
+		//printf("SHOCK ACTIVATED!\n");
 	} else if ((sv->state == 0)){
 		sv->shock_activated = 0;
 	}
@@ -100,23 +102,23 @@ void body_rgbcolor(SharedVariable* sv) {
 	//handle all different situations
 	//figure out the different rgb settings
 	if(sv->state == 0) {
-		digitalWrite(PIN_BLUE, 255);
-		digitalWrite(PIN_GREEN, 0);
-		digitalWrite(PIN_RED, 0);
+		digitalWrite(PIN_BLUE, HIGH);
+		digitalWrite(PIN_GREEN, LOW);
+		digitalWrite(PIN_RED, LOW);
   } else if(sv->state == 1) {
 
 	  if(sv->track_activated != 1 && sv->shock_activated == 1) {
-		  digitalWrite(PIN_RED, 255);
-  	  digitalWrite(PIN_GREEN, 0);
-  	  digitalWrite(PIN_BLUE, 0);
+		  digitalWrite(PIN_RED, HIGH);
+  	  digitalWrite(PIN_GREEN, LOW);
+  	  digitalWrite(PIN_BLUE, LOW);
 	  } else if(sv->shock_activated != 1 && sv->track_activated == 1) {
-  	  digitalWrite(PIN_RED, 118);
-  	  digitalWrite(PIN_GREEN, 0);
-  	  digitalWrite(PIN_BLUE, 238);
+  	  digitalWrite(PIN_RED, HIGH);
+  	  digitalWrite(PIN_GREEN, LOW);
+  	  digitalWrite(PIN_BLUE, HIGH);
 	  } else if(sv->shock_activated != 1 && sv->track_activated != 1) {
-  	  digitalWrite(PIN_RED, 0);
-  	  digitalWrite(PIN_GREEN, 255);
-  	  digitalWrite(PIN_BLUE, 0);
+  	  digitalWrite(PIN_RED, LOW);
+  	  digitalWrite(PIN_GREEN, HIGH);
+  	  digitalWrite(PIN_BLUE, LOW);
 	  }  
   }
 	
@@ -138,7 +140,8 @@ void body_aled(SharedVariable* sv) {
 
 void body_buzzer(SharedVariable* sv) {
 	if(sv->state == 1) {
-		if(sv->temp_activated == 1) {
+		int warning2 = sv->shock_activated || sv->track_activated;
+		if(sv->temp_activated == 1 && !warning2) {
 		  digitalWrite(PIN_BUZZER, HIGH);
 		  //printf("BUZZER ACTIVATED!\n");
 	

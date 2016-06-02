@@ -16,19 +16,16 @@
 // - Parameters
 // sv: The variable which is shared for every function over all threads
 void learn_workloads(SharedVariable* sv) {
-	// TODO: Fill the body
-	// This function is executed before the scheduling simulation.
-	// You need to calculate the execution time of each thread here.
+  // TODO: Fill the body
+  // This function is executed before the scheduling simulation.
+  // You need to calculate the execution time of each thread here.
 
   long long beginTime;
   long long endTime;
 
-  sv->avgTimeToSched = 0;
-  sv->numTimesSched = 0;
-  sv->prev_thread = 0;
-	// Thread functions for workloads: 
-	// thread_button, thread_twocolor, thread_temp, thread_track,
-	// thread_shock, thread_rgbcolor, thread_aled, thread_buzzer
+  // Thread functions for workloads: 
+  // thread_button, thread_twocolor, thread_temp, thread_track,
+  // thread_shock, thread_rgbcolor, thread_aled, thread_buzzer
 
   beginTime = get_current_time_us();
   thread_button(&sv);
@@ -78,19 +75,66 @@ void learn_workloads(SharedVariable* sv) {
 
   sv->exec_times[7] = endTime - beginTime;
 
-  int i;
+  //initiate idle time
+  sv->totalIdleTime = 0;
+  int i,j;
+  //long long temp;
+
   for(i = 0; i < 8; ++i)
   {
+    /**if(i%2 == 0) 
+    {
+      sv->freq[i] = 0;
+    } 
+    else
+    {
+      sv->freq[i] = 1;
+    }**/
+ 
     sv->deadlines[i] = LLONG_MAX;
     sv->prev_alive[i] = 0; 
-    //printDBG("exec %d = %lld\n", i, sv->exec_times[i]);
+    
   }
-  
-	// Tip 1. You can call each workload function here like:
-	// thread_button();
+  //basic way of setting a few tasks to high frequency
+  long long max = sv->exec_times[7];
+  sv->freq[7] = 1;
+  for(i = 6; i >= 0; --i)
+  {
+    if(sv->exec_times[i] > max)
+    {
+      max = sv->exec_times[i];
+      sv->freq[i] = 1;
+    }
+    else
+    {
+      sv->freq[i] = 0;
+    }
+    printDBG("exec %d = %lld\n", i, sv->exec_times[i]);
+    printDBG("freq  = %d\n", sv->freq[i]);
+  }
+     
 
-	// Tip 2. You can get the current time here like:
-	// long long curTime = get_current_time_us();
+
+ /** for(i = 0; i < 8; ++i)
+  {
+    for(j = i + 1; j < 8; ++j)
+    {
+      if(sv->exec_time[i] > sv->exec_time[j])
+      {
+        temp = sv->exec_time[i];
+        sv->exec_time[i] = sv->exec_time[j];
+        sv->exec_time[j] = temp;
+      }
+    }
+  }**/
+
+
+  
+  // Tip 1. You can call each workload function here like:
+  // thread_button();
+
+  // Tip 2. You can get the current time here like:
+  // long long curTime = get_current_time_us();
 }
 
 
@@ -104,10 +148,9 @@ void learn_workloads(SharedVariable* sv) {
 // - Return value
 // TaskSelection structure which indicates the scheduled task and the CPU frequency
 TaskSelection select_task(SharedVariable* sv, const int* aliveTasks, long long idleTime) {
-	// TODO: Fill the body
 
-	// This function is executed inside of the scheduling simulation.
-    // You need to implement an energy-efficient EDF (Earliest Deadline First) scheduler.
+  // This function is executed inside of the scheduling simulation.
+  // You need to implement an energy-efficient EDF (Earliest Deadline First) scheduler.
   long long closest = LLONG_MAX;
   int nextTask = 0;
   int nextFreq = 0;
@@ -122,7 +165,7 @@ TaskSelection select_task(SharedVariable* sv, const int* aliveTasks, long long i
   int currThread;
   for(currThread = 0; currThread < 8; ++currThread) {
     currTime = get_scheduler_elapsed_time_us(); 
-    nextFreq = 0;
+    //nextFreq =sv->freq[currThread]; //changed to one
    
     //if task isn't alive we don't care to schedule it
     if(aliveTasks[currThread] == 1)
@@ -150,58 +193,19 @@ TaskSelection select_task(SharedVariable* sv, const int* aliveTasks, long long i
       {
         closest = sv->deadlines[currThread];
         nextTask = currThread;
+	      nextFreq = sv->freq[currThread]; //frequency to run at
       } 
     }
     sv->prev_alive[currThread] = aliveTasks[currThread]; 
   }
-  
-  //sv->runningSchedTime += currTime - initialTime;
-  //sv->avgTimeToSched = sv->runningSchedTime / sv->numTimesSched;
-  //printDBG("sv->avgTimeToSched = %lld\n", sv->avgTimeToSched);
-  
-  sv->prev_thread = nextTask;
-  
-  if(nextTask == 2)
-    nextFreq = 1;
-  
+   
   TaskSelection sel;
   sel.task = nextTask;
   sel.freq = nextFreq;
-  
+  sv->totalIdleTime += idleTime; //for energy calculations
   //printDBG("nextTask = %d\n", nextTask);
+  //printDBG("running at: %d\n", nextFreq);
+ // printDBG("idle time: %lld\n", sv->totalIdleTime);
   
   return sel; 
 }
-
-        //look for earliest deadline
-	// Tip 1. You may get the current time elapsed in the scheduler here like:
-	// long long curTime = get_scheduler_elapsed_time_us();
-  // Also, do not make any interruptable / IO tasks in this function.
-	// You can use printfDBG instead of printf.
-  
-	// Sample scheduler: Round robin
-	// It selects a next thread using aliveTasks.
-	
-/**
-  static int prev_selection = -1;
-
-	int i = prev_selection + 1;
-	while(1) {
-		if (i == NUM_TASKS)
-			i = 0;
-
-		if (aliveTasks[i] == 1) {
-			prev_selection = i;
-			break;
-		}
-		++i;
-	}
-
-	// The retun value can be specified like this:
-	TaskSelection sel;
-	sel.task = prev_selection; // The thread ID which will be scheduled. i.e., 0(BUTTON) ~ 7(BUZZER)
-	sel.freq = 1; // Request the maximum frequency (if you want the minimum frequency, use 0 instead.)
-
-    return sel;
-}
-**/
